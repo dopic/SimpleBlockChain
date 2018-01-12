@@ -11,7 +11,7 @@ namespace Blockchain.Console
             blockchain.AddBlock(new {Souce = "Douglas", Target = "Magda", Amount = 10.00});
             blockchain.AddBlock(new {Souce = "Magda", Target = "Ilir", Amount = 5.00});
 
-            System.Console.WriteLine(JsonConvert.SerializeObject(blockchain, Formatting.Indented));
+            System.Console.WriteLine(blockchain);
 
             System.Console.WriteLine($"Is blockchain valid? {blockchain.Isvalid()}");
 
