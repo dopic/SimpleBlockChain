@@ -1,60 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace Blockchain.Core
 {
     public class Blockchain
     {
-        private const int MINING_DIFFICULTY = 4;
+        private const int MiningDifficulty = 4;
+        private Block _headBlock;
         
-        public List<Block> Chain { get; }
-
         public Blockchain()
         {
-            Chain = new List<Block>
-            {
-                CreateGenesisBlock()
-            };
+            _headBlock = CreateGenesisBlock();
         }
 
         private Block CreateGenesisBlock()
         {
             var block = new Block(0, DateTime.MinValue, "First");
-            block.Mine(MINING_DIFFICULTY);
+            block.Mine(MiningDifficulty);
             return block;
         }
 
         public void AddBlock(object data)
         {
-            var previousHash = Chain.Last().Hash;
             var newBlock = new Block
             (
-                Chain.Count,
+                _headBlock.Index + 1,
                 DateTime.UtcNow,
                 data,
-                previousHash
+                _headBlock
             );
             
-            newBlock.Mine(MINING_DIFFICULTY);
-            Chain.Add(newBlock);
+            newBlock.Mine(MiningDifficulty);
+            _headBlock = newBlock;
         }
 
         public bool Isvalid()
         {
-            Block previousBlock = null;
-            foreach (var block in Chain)
+            Block block = _headBlock;
+            do
             {
                 if (!block.IsValid())
                     return false;
-
-                if (previousBlock != null && previousBlock.Hash != block.PreviousHash)
-                    return false;
-
-                previousBlock = block;
-            }
+                block = block.PreviousBlock;
+            } while (block != null);
 
             return true;
+        }
+
+        public override string ToString()
+        {
+           var builder = new StringBuilder();
+           _headBlock.WriteDescendants(builder);           
+            
+            return builder.ToString();
+
+            //return JsonConvert.SerializeObject(_headBlock, Formatting.Indented);
         }
     }
 }

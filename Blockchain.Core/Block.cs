@@ -9,19 +9,20 @@ namespace Blockchain.Core
 {
     public class Block
     {
+        public long Index { get; }
         public string Hash { get; private set; }
         public int Nonce { get; private set; }
-        public string PreviousHash { get; }
+        [JsonIgnore]
+        public Block PreviousBlock { get; }
         public DateTime Timestamp { get; }
         public object Data { get; }
-        public long Index { get; }
 
-        public Block(long index, DateTime timestamp, object data, string previousHash = "")
+        public Block(long index, DateTime timestamp, object data, Block previousBlock = null)
         {
             Index = index;
             Timestamp = timestamp;
             Data = data;
-            PreviousHash = previousHash;
+            PreviousBlock = previousBlock;
             Hash = CalculateHash();
         }
 
@@ -58,9 +59,9 @@ namespace Blockchain.Core
             bytes = Encoding.UTF8.GetBytes(data);
             stream.Write(bytes, 0, bytes.Length);
 
-            bytes = Encoding.UTF8.GetBytes(PreviousHash ?? string.Empty);
+            bytes = Encoding.UTF8.GetBytes(PreviousBlock?.Hash ?? string.Empty);
             stream.Write(bytes, 0, bytes.Length);
-            
+
             bytes = BitConverter.GetBytes(Nonce);
             stream.Write(bytes, 0, bytes.Length);
 
@@ -86,6 +87,12 @@ namespace Blockchain.Core
         private bool HashIsValid(int difficulty)
         {
             return Hash.Substring(0, difficulty) != "0".PadLeft(difficulty, '0');
+        }
+
+        public void WriteDescendants(StringBuilder builder)
+        {
+            builder.AppendLine(JsonConvert.SerializeObject(this, Formatting.Indented));
+            PreviousBlock?.WriteDescendants(builder);
         }
     }
 }
